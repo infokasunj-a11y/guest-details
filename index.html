@@ -1058,10 +1058,9 @@
               </table>
             </div>
 
-            <!-- Footer: Signatures removed, only Senasuma Inn as requested -->
+            <!-- Footer: Strictly only Senasuma Inn -->
             <div class="a5-footer">
               <div class="a5-footer-brand">Senasuma Inn</div>
-              <div class="a5-footer-details">Waterfall Road, Ella • Tel: +94 71 411 0211</div>
             </div>
           </div>
         </div>
@@ -1612,10 +1611,10 @@ _Sent via Senasuma Inn Daily Reporter_`;
       }, 2400);
     }
 
-    // Register Service Worker
+    // Register Service Worker (v3 cache busting)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=3').catch(() => {});
       });
     }
 
