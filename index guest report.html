@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Senasuma Inn">
+  <meta name="theme-color" content="#0F5132">
+  <link rel="manifest" href="manifest.json">
+  <title>Senasuma Inn - Daily Guest Report to Police</title>
+
+  <!-- html2pdf & html2canvas for PDF and Image export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #0F5132;
+      --primary-dark: #0A3622;
+      --primary-light: #D1E7DD;
+      --accent: #D4A373;
+      --accent-hover: #C58F5B;
+      --bg: #F4F6F8;
+      --surface: #FFFFFF;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --danger: #DC2626;
+      --success: #16A34A;
+      --whatsapp: #25D366;
+      --whatsapp-dark: #1EBE5D;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      padding-bottom: 105px;
+    }
+
+    /* Prevent iOS auto-zoom on input focus */
+    input, select, textarea, button {
+      font-size: 16px !important;
+      -webkit-appearance: none;
+    }
+
+    /* App Header */
+    .app-header {
+      background: linear-gradient(135deg, #0f4c3a 0%, #173f35 100%);
+      color: white;
+      padding: 16px 16px 20px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: 0 6px 18px rgba(15, 76, 58, 0.25);
+      width: 100%;
+    }
+
+    .hotel-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hotel-logo-badge {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+
+    .hotel-info h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .hotel-info p {
+      font-size: 0.78rem;
+      opacity: 0.9;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .badge-report {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(212, 163, 115, 0.25);
+      border: 1px solid rgba(212, 163, 115, 0.4);
+      color: #fae1c6;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 560px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    /* Meta Details Card */
+    .meta-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-top: -12px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .meta-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .meta-field label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+    }
+
+    .meta-field input, .meta-field select {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-weight: 600;
+      color: var(--text-main);
+      outline: none;
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* Summary Bar */
+    .summary-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-top: 10px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .summary-stat {
+      text-align: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .summary-stat:not(:last-child) {
+      border-right: 1px solid var(--border);
+    }
+
+    .stat-val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.1;
+    }
+
+    .stat-val.male { color: #2563EB; }
+    .stat-val.female { color: #DB2777; }
+
+    .stat-lbl {
+      font-size: 0.64rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Section Title */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 16px 0 8px;
+      padding: 0 2px;
+    }
+
+    .section-header h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-text-action {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 6px;
+      border-radius: 6px;
+    }
+
+    /* Country List */
+    .countries-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .country-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .country-card.active {
+      border-color: #86EFAC;
+      background: #F0FDF4;
+    }
+
+    .country-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .country-flag {
+      font-size: 1.35rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .country-name-wrap {
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .country-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .country-total-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .country-card.active .country-total-badge {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* Compact Steppers (Fits all iPhone screens) */
+    .counters-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .counter-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .counter-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .counter-label.male { color: #2563EB; }
+    .counter-label.female { color: #DB2777; }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: #F1F5F9;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .stepper-btn {
+      width: 25px;
+      height: 30px;
+      background: #F1F5F9;
+      border: none;
+      font-size: 1.15rem !important;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      padding: 0;
+    }
+
+    .stepper-btn:active {
+      background: #CBD5E1;
+    }
+
+    .stepper-input {
+      width: 26px;
+      height: 30px;
+      border: none;
+      background: #FFFFFF;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.9rem !important;
+      color: var(--text-main);
+      padding: 0;
+      outline: none;
+      border-radius: 0;
+    }
+
+    .btn-delete-country {
+      background: none;
+      border: none;
+      color: #94A3B8;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 2px;
+    }
+
+    .btn-delete-country:hover {
+      color: var(--danger);
+    }
+
+    /* Add Country Card */
+    .add-country-box {
+      margin-top: 12px;
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      border: 2px dashed #CBD5E1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .add-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .add-select {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #F8FAFC;
+      font-weight: 600;
+      color: var(--text-main);
+      outline: none;
+      min-width: 0;
+    }
+
+    .btn-add-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-size: 0.85rem !important;
+    }
+
+    .custom-country-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .custom-input {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      outline: none;
+      min-width: 0;
+    }
+
+    /* Fixed Bottom Action Bar (iPhone Safe Area Aware) */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.98);
+      border-top: 1px solid var(--border);
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+      z-index: 100;
+      width: 100%;
+    }
+
+    .bottom-bar-inner {
+      max-width: 560px;
+      width: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn-action {
+      border: none;
+      padding: 9px 4px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-align: center;
+      line-height: 1.1;
+      font-size: 0.78rem !important;
+    }
+
+    .btn-action svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .btn-whatsapp {
+      background: var(--whatsapp);
+      color: white;
+    }
+
+    .btn-pdf {
+      background: #1E293B;
+      color: white;
+    }
+
+    .btn-preview {
+      background: #E2E8F0;
+      color: var(--text-main);
+    }
+
+    /* Modal / Preview Styles */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal-container {
+      background: white;
+      width: 100%;
+      max-width: 540px;
+      max-height: 94vh;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    }
+
+    .modal-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #F8FAFC;
+    }
+
+    .modal-header h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.6rem !important;
+      color: var(--text-muted);
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+
+    .modal-body {
+      padding: 10px 8px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: #F1F5F9;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .modal-footer {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 6px;
+      background: white;
+      flex-wrap: wrap;
+    }
+
+    /* ========================================================
+       OFFICIAL A5 DOCUMENT TEMPLATE
+       ======================================================== */
+    .a5-paper-wrapper {
+      box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+      border-radius: 2px;
+      background: white;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .a5-paper {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 14px 12px;
+      background: white;
+      color: #111827;
+      font-size: 8.5pt;
+      line-height: 1.35;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    /* A5 Header */
+    .a5-header {
+      border-bottom: 2px solid #0F5132;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .a5-hotel-title {
+      font-size: 14pt;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #0F5132;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .a5-hotel-sub {
+      font-size: 8.2pt;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .a5-contact {
+      font-size: 8pt;
+      color: #4B5563;
+      margin-top: 1px;
+      font-weight: 700;
+    }
+
+    .a5-doc-badge {
+      display: inline-block;
+      margin-top: 5px;
+      background: #0F5132;
+      color: white;
+      padding: 3px 12px;
+      border-radius: 4px;
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* A5 Meta Info Row */
+    .a5-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 5px;
+      padding: 6px 8px;
+      margin-bottom: 8px;
+      font-size: 7.5pt;
+    }
+
+    .a5-meta-item strong {
+      color: #64748B;
+      font-size: 6.8pt;
+      display: block;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .a5-meta-item span {
+      color: #0F172A;
+      font-weight: 700;
+      font-size: 8.5pt;
+    }
+
+    /* A5 Table */
+    .a5-table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .a5-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8pt;
+      margin-bottom: 6px;
+    }
+
+    .a5-table th {
+      background: #0F5132;
+      color: white;
+      text-align: left;
+      padding: 4px 6px;
+      font-size: 7.4pt;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: 1px solid #0F5132;
+    }
+
+    .a5-table th.center, .a5-table td.center {
+      text-align: center;
+    }
+
+    .a5-table td {
+      padding: 4px 6px;
+      border: 1px solid #CBD5E1;
+      color: #1E293B;
+      font-size: 7.8pt;
+    }
+
+    .a5-table tr:nth-child(even) td {
+      background-color: #F8FAFC;
+    }
+
+    .a5-table tr.total-row td {
+      background: #E2E8F0;
+      font-weight: 800;
+      color: #0F172A;
+      border-top: 2px solid #0F5132;
+      font-size: 8.2pt;
+    }
+
+    /* A5 Footer (Updated as requested: Signatures removed, only Senasuma Inn) */
+    .a5-footer {
+      margin-top: 14px;
+      padding-top: 8px;
+      border-top: 2px solid #0F5132;
+      text-align: center;
+    }
+
+    .a5-footer-brand {
+      font-size: 11pt;
+      font-weight: 800;
+      color: #0F5132;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .a5-footer-details {
+      font-size: 7.8pt;
+      color: #64748B;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    /* Image Preview Modal (for iOS photo save) */
+    #imageModal .modal-body {
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+    }
+
+    #imageModal img {
+      max-width: 100%;
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+
+    .ios-tip-box {
+      margin-top: 10px;
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      color: #92400E;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      text-align: center;
+      line-height: 1.3;
+      width: 100%;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 95px;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: #1E293B;
+      color: white;
+      padding: 9px 18px;
+      border-radius: 30px;
+      font-size: 0.82rem !important;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Print media style for native A5 printing (AirPrint / Save as PDF) */
+    @media print {
+      @page {
+        size: A5 portrait;
+        margin: 5mm;
+      }
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 148mm !important;
+        min-height: 210mm !important;
+        margin: 0;
+        padding: 8mm !important;
+        box-shadow: none;
+      }
+      .modal-backdrop, .bottom-bar, .app-header, .container {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Hotel Header -->
+  <header class="app-header">
+    <div class="hotel-brand">
+      <div class="hotel-logo-badge">🏨</div>
+      <div class="hotel-info">
+        <h1>Senasuma Inn</h1>
+        <p>
+          <span>📍 Waterfall Road, Ella</span>
+          <span>•</span>
+          <span>📞 +94 71 411 0211</span>
+        </p>
+      </div>
+    </div>
+    <div class="badge-report">
+      <span>👮 Daily Guest Report to Police</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Meta Details Card -->
+    <div class="meta-card">
+      <div class="meta-field">
+        <label for="reportDate">Date (දිනය)</label>
+        <input type="date" id="reportDate">
+      </div>
+      <div class="meta-field">
+        <label for="reportTime">Shift / Time (වේලාව)</label>
+        <select id="reportTime">
+          <option value="Evening (18:00)">Evening Report (හවස 6:00)</option>
+          <option value="Morning (08:00)">Morning Report (උදේ 8:00)</option>
+          <option value="Night (22:00)">Night Final (රාත්‍රී 10:00)</option>
+        </select>
+      </div>
+      <div class="meta-field">
+        <label for="roomsOccupied">Rooms (කාමර)</label>
+        <input type="number" id="roomsOccupied" placeholder="0" min="0" value="0">
+      </div>
+      <div class="meta-field">
+        <label for="officerInCharge">Prepared By</label>
+        <input type="text" id="officerInCharge" value="Reception">
+      </div>
+    </div>
+
+    <!-- Live Total Summary -->
+    <div class="summary-card">
+      <div class="summary-stat">
+        <div class="stat-val male" id="totalMale">0</div>
+        <div class="stat-lbl">Male</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-val female" id="totalFemale">0</div>
+        <div class="stat-lbl">Female</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-val" id="grandTotal">0</div>
+        <div class="stat-lbl">Total Guests</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-val" id="activeCountriesCount" style="color: #64748B;">0</div>
+        <div class="stat-lbl">Countries</div>
+      </div>
+    </div>
+
+    <!-- Section Title -->
+    <div class="section-header">
+      <h2>🌍 Guest Breakdown</h2>
+      <button type="button" class="btn-text-action" id="btnClearAll" title="Reset all counts to 0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+        Reset
+      </button>
+    </div>
+
+    <!-- Country Cards List -->
+    <div class="countries-list" id="countriesContainer">
+      <!-- Injected by JavaScript -->
+    </div>
+
+    <!-- Add More Countries Box -->
+    <div class="add-country-box">
+      <div style="font-size: 0.78rem; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 4px;">
+        <span>➕</span> Add Other Country (වෙනත් රටක් එක් කරන්න)
+      </div>
+      
+      <div class="add-row">
+        <select class="add-select" id="popularCountrySelect">
+          <option value="">-- Select Country --</option>
+          <option value="United Kingdom|🇬🇧">United Kingdom (UK)</option>
+          <option value="France|🇫🇷">France</option>
+          <option value="Australia|🇦🇺">Australia</option>
+          <option value="Russia|🇷🇺">Russia</option>
+          <option value="China|🇨🇳">China</option>
+          <option value="Israel|🇮🇱">Israel</option>
+          <option value="Canada|🇨🇦">Canada</option>
+          <option value="Italy|🇮🇹">Italy</option>
+          <option value="Switzerland|🇨🇭">Switzerland</option>
+          <option value="Poland|🇵🇱">Poland</option>
+          <option value="Czech Republic|🇨🇿">Czech Republic</option>
+          <option value="Austria|🇦🇹">Austria</option>
+          <option value="Belgium|🇧🇪">Belgium</option>
+          <option value="Sweden|🇸🇪">Sweden</option>
+          <option value="Norway|🇳🇴">Norway</option>
+          <option value="Denmark|🇩🇰">Denmark</option>
+          <option value="Japan|🇯🇵">Japan</option>
+          <option value="South Korea|🇰🇷">South Korea</option>
+          <option value="New Zealand|🇳🇿">New Zealand</option>
+          <option value="Sri Lanka (Local)|🇱🇰">Sri Lanka (Local)</option>
+        </select>
+        <button type="button" class="btn-add-primary" id="btnAddFromSelect">Add</button>
+      </div>
+
+      <div class="custom-country-row">
+        <input type="text" class="custom-input" id="customCountryName" placeholder="Or type country (e.g. Ireland)...">
+        <button type="button" class="btn-add-primary" style="background: #334155;" id="btnAddCustom">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Fixed Action Bar -->
+  <div class="bottom-bar">
+    <div class="bottom-bar-inner">
+      <button type="button" class="btn-action btn-whatsapp" id="btnWhatsApp">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.06 6.89C8.84 6.89 8.65 6.9 8.46 7.32C8.27 7.74 7.73 8.27 7.73 9.35C7.73 10.43 8.52 11.47 8.63 11.62C8.74 11.77 10.15 13.93 12.33 14.88C14.14 15.65 14.51 15.5 14.92 15.46C15.33 15.42 16.27 14.91 16.47 14.34C16.67 13.78 16.67 13.3 16.61 13.2C16.55 13.1 16.39 13.04 16.15 12.92C15.91 12.8 14.73 12.22 14.51 12.14C14.29 12.06 14.13 12.02 13.97 12.26C13.81 12.5 13.35 13.04 13.21 13.2C13.07 13.36 12.93 13.38 12.69 13.26C12.45 13.14 11.68 12.89 10.76 12.07C10.04 11.43 9.55 10.64 9.41 10.4C9.27 10.16 9.4 10.03 9.52 9.91C9.63 9.8 9.77 9.62 9.91 9.46C10.05 9.3 10.1 9.18 10.19 9.02C10.28 8.86 10.23 8.72 10.17 8.6C10.11 8.48 9.63 7.3 9.43 6.82C9.23 6.34 9.03 6.42 8.89 6.42C8.75 6.42 8.59 6.41 8.43 6.41L9.06 6.89Z"/>
+        </svg>
+        <span>Send WhatsApp</span>
+      </button>
+
+      <button type="button" class="btn-action btn-pdf" id="btnDownloadPDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>A5 PDF</span>
+      </button>
+
+      <button type="button" class="btn-action btn-preview" id="btnOpenPreview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span>A5 View</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- A5 Preview Modal -->
+  <div class="modal-backdrop" id="previewModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>📄 Daily Guest Report to Police (A5)</h3>
+        <button type="button" class="modal-close" id="btnClosePreview">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="a5-paper-wrapper">
+          <div class="a5-paper" id="printArea">
+            <!-- Header -->
+            <div class="a5-header">
+              <div class="a5-hotel-title">Senasuma Inn</div>
+              <div class="a5-hotel-sub">Waterfall Road, Ella, Sri Lanka</div>
+              <div class="a5-contact">Tel: +94 71 411 0211</div>
+              <div class="a5-doc-badge">Daily Guest Report to Police</div>
+            </div>
+
+            <!-- Meta details -->
+            <div class="a5-meta-grid">
+              <div class="a5-meta-item">
+                <strong>Date:</strong>
+                <span id="pDate">-</span>
+              </div>
+              <div class="a5-meta-item">
+                <strong>Shift:</strong>
+                <span id="pTime">Evening (18:00)</span>
+              </div>
+              <div class="a5-meta-item">
+                <strong>Rooms Occupied:</strong>
+                <span id="pRooms">0</span>
+              </div>
+            </div>
+
+            <!-- Table of guests -->
+            <div class="a5-table-container">
+              <table class="a5-table">
+                <thead>
+                  <tr>
+                    <th style="width: 8%;">#</th>
+                    <th style="width: 46%;">Country / Nationality</th>
+                    <th class="center" style="width: 15%;">Male</th>
+                    <th class="center" style="width: 15%;">Female</th>
+                    <th class="center" style="width: 16%;">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="pTableBody">
+                  <!-- Dynamically rendered rows -->
+                </tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td colspan="2" style="text-align: right; padding-right: 8px;">GRAND TOTAL:</td>
+                    <td class="center" id="pTotalMale">0</td>
+                    <td class="center" id="pTotalFemale">0</td>
+                    <td class="center" id="pGrandTotal">0</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Footer: Signatures removed, only Senasuma Inn as requested -->
+            <div class="a5-footer">
+              <div class="a5-footer-brand">Senasuma Inn</div>
+              <div class="a5-footer-details">Waterfall Road, Ella • Tel: +94 71 411 0211</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action btn-pdf" style="flex: 1; padding: 10px;" id="btnModalPDF">
+          📄 Save PDF
+        </button>
+        <button type="button" class="btn-action" style="flex: 1; padding: 10px; background: #0369A1; color: white;" id="btnModalImage">
+          🖼️ Save Photo (JPEG)
+        </button>
+        <button type="button" class="btn-action btn-whatsapp" style="flex: 1 1 100%; padding: 11px;" id="btnModalWhatsApp">
+          💬 Send WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS Image Preview & Save Modal -->
+  <div class="modal-backdrop" id="imageModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>🖼️ Save A5 Photo</h3>
+        <button type="button" class="modal-close" id="btnCloseImageModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <img id="generatedImg" src="" alt="A5 Report">
+        <div class="ios-tip-box">
+          📱 <strong>iPhone Tips:</strong> Image එක උඩ තත්පර 1ක් ඇඟිල්ල තද කරගෙන සිට (Long-press) <strong>"Save to Photos"</strong> දෙන්න.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action" style="flex: 1; background: #0F5132; color: white; padding: 11px;" id="btnShareNative">
+          📤 Share / Save Photo
+        </button>
+        <button type="button" class="btn-action btn-preview" style="flex: 1; padding: 11px;" id="btnCloseImgBtn">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastMsg">Action completed!</div>
+
+  <script>
+    // Bulletproof iOS & Android Safe Storage
+    const memStore = {};
+    const SafeStorage = {
+      getItem: function(key) {
+        try {
+          if (window.localStorage) {
+            return window.localStorage.getItem(key);
+          }
+        } catch (e) {}
+        return memStore[key] || null;
+      },
+      setItem: function(key, val) {
+        try {
+          if (window.localStorage) {
+            window.localStorage.setItem(key, val);
+          }
+        } catch (e) {}
+        memStore[key] = val;
+      }
+    };
+
+    // Pre-configured Countries
+    const DEFAULT_COUNTRIES = [
+      { id: 'usa', name: 'USA', flag: '🇺🇸', male: 0, female: 0 },
+      { id: 'netherlands', name: 'Netherlands', flag: '🇳🇱', male: 0, female: 0 },
+      { id: 'spain', name: 'Spain', flag: '🇪🇸', male: 0, female: 0 },
+      { id: 'germany', name: 'Germany', flag: '🇩🇪', male: 0, female: 0 },
+      { id: 'india', name: 'India', flag: '🇮🇳', male: 0, female: 0 }
+    ];
+
+    let countriesData = [];
+    let currentImageBlob = null;
+    let currentImageDataUrl = '';
+
+    // Initialize State Safely
+    function initData() {
+      try {
+        const saved = SafeStorage.getItem('senasuma_report_countries');
+        if (saved) {
+          try {
+            countriesData = JSON.parse(saved);
+          } catch (e) {
+            countriesData = JSON.parse(JSON.stringify(DEFAULT_COUNTRIES));
+          }
+        } else {
+          countriesData = JSON.parse(JSON.stringify(DEFAULT_COUNTRIES));
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('reportDate');
+        dateInput.value = SafeStorage.getItem('senasuma_report_date') || today;
+        dateInput.addEventListener('change', () => {
+          SafeStorage.setItem('senasuma_report_date', dateInput.value);
+          updateCalculations();
+        });
+
+        const roomsInput = document.getElementById('roomsOccupied');
+        roomsInput.value = SafeStorage.getItem('senasuma_report_rooms') || '0';
+        roomsInput.addEventListener('input', () => {
+          SafeStorage.setItem('senasuma_report_rooms', roomsInput.value);
+          updateCalculations();
+        });
+
+        const timeSelect = document.getElementById('reportTime');
+        timeSelect.value = SafeStorage.getItem('senasuma_report_time') || 'Evening (18:00)';
+        timeSelect.addEventListener('change', () => {
+          SafeStorage.setItem('senasuma_report_time', timeSelect.value);
+          updateCalculations();
+        });
+
+        renderCountryCards();
+        updateCalculations();
+      } catch (err) {
+        console.error('Initialization error:', err);
+      }
+    }
+
+    function saveState() {
+      SafeStorage.setItem('senasuma_report_countries', JSON.stringify(countriesData));
+    }
+
+    // Render Cards in Mobile View
+    function renderCountryCards() {
+      const container = document.getElementById('countriesContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      countriesData.forEach((item, index) => {
+        const total = (item.male || 0) + (item.female || 0);
+        const isActive = total > 0;
+
+        const card = document.createElement('div');
+        card.className = `country-card ${isActive ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="country-left">
+            <span class="country-flag">${item.flag || '🏳️'}</span>
+            <div class="country-name-wrap">
+              <div class="country-name">${item.name}</div>
+              <div class="country-total-badge">${total > 0 ? `Total: ${total}` : '0'}</div>
+            </div>
+          </div>
+
+          <div class="counters-group">
+            <div class="counter-block">
+              <span class="counter-label male">M</span>
+              <div class="stepper">
+                <button type="button" class="stepper-btn" onclick="stepCount(${index}, 'male', -1)">−</button>
+                <input type="number" class="stepper-input" min="0" value="${item.male || 0}" onchange="setCount(${index}, 'male', this.value)">
+                <button type="button" class="stepper-btn" onclick="stepCount(${index}, 'male', 1)">+</button>
+              </div>
+            </div>
+
+            <div class="counter-block">
+              <span class="counter-label female">F</span>
+              <div class="stepper">
+                <button type="button" class="stepper-btn" onclick="stepCount(${index}, 'female', -1)">−</button>
+                <input type="number" class="stepper-input" min="0" value="${item.female || 0}" onchange="setCount(${index}, 'female', this.value)">
+                <button type="button" class="stepper-btn" onclick="stepCount(${index}, 'female', 1)">+</button>
+              </div>
+            </div>
+
+            <button type="button" class="btn-delete-country" onclick="removeCountry(${index})" title="Remove Country">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    window.stepCount = function(index, gender, delta) {
+      if (!countriesData[index]) return;
+      let val = (countriesData[index][gender] || 0) + delta;
+      if (val < 0) val = 0;
+      countriesData[index][gender] = val;
+      saveState();
+      renderCountryCards();
+      updateCalculations();
+    };
+
+    window.setCount = function(index, gender, val) {
+      if (!countriesData[index]) return;
+      let parsed = parseInt(val, 10);
+      if (isNaN(parsed) || parsed < 0) parsed = 0;
+      countriesData[index][gender] = parsed;
+      saveState();
+      renderCountryCards();
+      updateCalculations();
+    };
+
+    window.removeCountry = function(index) {
+      if (confirm(`Remove ${countriesData[index].name}?`)) {
+        countriesData.splice(index, 1);
+        saveState();
+        renderCountryCards();
+        updateCalculations();
+        showToast('Removed');
+      }
+    };
+
+    document.getElementById('btnClearAll').addEventListener('click', () => {
+      if (confirm('Reset all guest counts to 0 for today?')) {
+        countriesData.forEach(c => {
+          c.male = 0;
+          c.female = 0;
+        });
+        document.getElementById('roomsOccupied').value = 0;
+        SafeStorage.setItem('senasuma_report_rooms', '0');
+        saveState();
+        renderCountryCards();
+        updateCalculations();
+        showToast('Reset to 0');
+      }
+    });
+
+    document.getElementById('btnAddFromSelect').addEventListener('click', () => {
+      const select = document.getElementById('popularCountrySelect');
+      const val = select.value;
+      if (!val) return;
+
+      const [name, flag] = val.split('|');
+      addCountryToList(name, flag);
+      select.value = '';
+    });
+
+    document.getElementById('btnAddCustom').addEventListener('click', () => {
+      const input = document.getElementById('customCountryName');
+      const name = input.value.trim();
+      if (!name) return;
+
+      addCountryToList(name, '🏳️');
+      input.value = '';
+    });
+
+    function addCountryToList(name, flag) {
+      const exists = countriesData.some(c => c.name.toLowerCase() === name.toLowerCase());
+      if (exists) {
+        showToast(`${name} is already in the list!`);
+        return;
+      }
+
+      countriesData.push({
+        id: name.toLowerCase().replace(/\s+/g, '-'),
+        name: name,
+        flag: flag || '🏳️',
+        male: 0,
+        female: 0
+      });
+
+      saveState();
+      renderCountryCards();
+      updateCalculations();
+      showToast(`Added ${name}`);
+    }
+
+    function updateCalculations() {
+      let tMale = 0;
+      let tFemale = 0;
+      let activeCountries = 0;
+
+      countriesData.forEach(c => {
+        const m = c.male || 0;
+        const f = c.female || 0;
+        tMale += m;
+        tFemale += f;
+        if ((m + f) > 0) {
+          activeCountries++;
+        }
+      });
+
+      const grandTotal = tMale + tFemale;
+
+      document.getElementById('totalMale').innerText = tMale;
+      document.getElementById('totalFemale').innerText = tFemale;
+      document.getElementById('grandTotal').innerText = grandTotal;
+      document.getElementById('activeCountriesCount').innerText = activeCountries;
+
+      updatePrintableA5(tMale, tFemale, grandTotal);
+    }
+
+    function updatePrintableA5(tMale, tFemale, grandTotal) {
+      const dateVal = document.getElementById('reportDate').value;
+      const timeVal = document.getElementById('reportTime').value;
+      const roomsVal = document.getElementById('roomsOccupied').value || '0';
+
+      let formattedDate = dateVal;
+      if (dateVal) {
+        const d = new Date(dateVal + 'T00:00:00');
+        formattedDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+
+      document.getElementById('pDate').innerText = formattedDate || '-';
+      document.getElementById('pTime').innerText = timeVal;
+      document.getElementById('pRooms').innerText = roomsVal;
+
+      const tbody = document.getElementById('pTableBody');
+      tbody.innerHTML = '';
+
+      const activeList = countriesData.filter(c => (c.male || 0) + (c.female || 0) > 0);
+      const displayList = activeList.length > 0 ? activeList : countriesData;
+
+      if (displayList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 12px; color:#64748B;">No guests registered today</td></tr>`;
+      } else {
+        displayList.forEach((c, idx) => {
+          const m = c.male || 0;
+          const f = c.female || 0;
+          const tot = m + f;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="text-align: center;">${idx + 1}</td>
+            <td><strong>${c.name}</strong></td>
+            <td class="center">${m}</td>
+            <td class="center">${f}</td>
+            <td class="center" style="font-weight: 700;">${tot}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('pTotalMale').innerText = tMale;
+      document.getElementById('pTotalFemale').innerText = tFemale;
+      document.getElementById('pGrandTotal').innerText = grandTotal;
+    }
+
+    function generateWhatsAppMessage() {
+      const dateVal = document.getElementById('reportDate').value;
+      let formattedDate = dateVal;
+      if (dateVal) {
+        const d = new Date(dateVal + 'T00:00:00');
+        formattedDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+      const timeVal = document.getElementById('reportTime').value;
+      const roomsVal = document.getElementById('roomsOccupied').value || '0';
+
+      const activeList = countriesData.filter(c => (c.male || 0) + (c.female || 0) > 0);
+      let tMale = 0;
+      let tFemale = 0;
+
+      let guestLines = '';
+      if (activeList.length === 0) {
+        guestLines = '• _No in-house guests recorded today._\n';
+      } else {
+        activeList.forEach(c => {
+          const m = c.male || 0;
+          const f = c.female || 0;
+          const tot = m + f;
+          tMale += m;
+          tFemale += f;
+          guestLines += `• *${c.name}*: ${tot} (M: ${m} | F: ${f})\n`;
+        });
+      }
+
+      const grandTotal = tMale + tFemale;
+
+      const message = 
+`🏨 *SENASUMA INN - ELLA*
+📍 Waterfall Road, Ella | 📞 +94714110211
+📋 *DAILY GUEST REPORT TO POLICE*
+────────────────────
+📅 *Date:* ${formattedDate}
+⏰ *Report:* ${timeVal}
+🚪 *Rooms Occupied:* ${roomsVal}
+
+👥 *GUEST BREAKDOWN BY COUNTRY:*
+${guestLines}
+────────────────────
+📊 *TOTAL SUMMARY:*
+• *Total Guests:* ${grandTotal}
+• *Male:* ${tMale}  |  *Female:* ${tFemale}
+• *Countries:* ${activeList.length}
+────────────────────
+_Sent via Senasuma Inn Daily Reporter_`;
+
+      return message;
+    }
+
+    function sendWhatsApp() {
+      const text = generateWhatsAppMessage();
+      const encoded = encodeURIComponent(text);
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+      }
+      showToast('Text copied! Opening WhatsApp...');
+
+      const waUrl = 'https://wa.me/?text=' + encoded;
+      window.location.href = waUrl;
+    }
+
+    document.getElementById('btnWhatsApp').addEventListener('click', sendWhatsApp);
+    document.getElementById('btnModalWhatsApp').addEventListener('click', sendWhatsApp);
+
+    // Download A5 PDF / AirPrint
+    function downloadA5PDF() {
+      const element = document.getElementById('printArea');
+      const dateVal = document.getElementById('reportDate').value || 'Report';
+
+      if (window.html2pdf) {
+        showToast('Generating A5 PDF file...');
+        const opt = {
+          margin: [4, 4, 4, 4],
+          filename: `Senasuma_Inn_Police_Report_${dateVal}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2.2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+          showToast('A5 PDF Downloaded!');
+        }).catch(err => {
+          console.error(err);
+          window.print();
+        });
+      } else {
+        showToast('Opening Print / Save as PDF...');
+        setTimeout(() => { window.print(); }, 200);
+      }
+    }
+
+    document.getElementById('btnDownloadPDF').addEventListener('click', downloadA5PDF);
+    document.getElementById('btnModalPDF').addEventListener('click', downloadA5PDF);
+
+    // iPhone-Optimized JPEG Photo Generator & Share
+    function downloadA5Image() {
+      showToast('Generating A5 Photo...');
+      const element = document.getElementById('printArea');
+      const dateVal = document.getElementById('reportDate').value || 'Report';
+
+      if (!window.html2canvas) {
+        showToast('Image engine loading, please retry...');
+        return;
+      }
+
+      html2canvas(element, {
+        scale: 2.2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      }).then(canvas => {
+        currentImageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+        // Convert to Blob for iOS native sharing / saving
+        canvas.toBlob(blob => {
+          currentImageBlob = blob;
+          const fileName = `Senasuma_Inn_Report_${dateVal}.jpg`;
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+          // Try iOS Native Share Sheet (Allows 1-tap "Save Image" or "WhatsApp")
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+              files: [file],
+              title: 'Senasuma Inn Police Report'
+            }).then(() => {
+              showToast('Photo Saved / Shared!');
+            }).catch(e => {
+              if (e.name !== 'AbortError') {
+                openImageModal(currentImageDataUrl);
+              }
+            });
+          } else {
+            // Fallback: Open in Image Modal where iOS user can long-press to save, or trigger link download
+            openImageModal(currentImageDataUrl);
+            
+            // Also trigger standard download link for Android/PC
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = currentImageDataUrl;
+            link.click();
+          }
+        }, 'image/jpeg', 0.95);
+      }).catch(err => {
+        console.error(err);
+        showToast('Could not create photo');
+      });
+    }
+
+    function openImageModal(dataUrl) {
+      document.getElementById('generatedImg').src = dataUrl;
+      document.getElementById('imageModal').classList.add('show');
+    }
+
+    document.getElementById('btnModalImage').addEventListener('click', downloadA5Image);
+
+    // Native Share Button inside Image Modal
+    document.getElementById('btnShareNative').addEventListener('click', () => {
+      const dateVal = document.getElementById('reportDate').value || 'Report';
+      if (currentImageBlob && navigator.canShare) {
+        const file = new File([currentImageBlob], `Senasuma_Inn_Report_${dateVal}.jpg`, { type: 'image/jpeg' });
+        if (navigator.canShare({ files: [file] })) {
+          navigator.share({
+            files: [file],
+            title: 'Senasuma Inn Police Report'
+          }).catch(() => {});
+          return;
+        }
+      }
+      // If native share unavailable, open image in new tab so user can save
+      const win = window.open();
+      if (win) {
+        win.document.write(`<img src="${currentImageDataUrl}" style="max-width:100%;">`);
+      } else {
+        showToast('Long-press the image above to save!');
+      }
+    });
+
+    document.getElementById('btnCloseImageModal').addEventListener('click', () => {
+      document.getElementById('imageModal').classList.remove('show');
+    });
+    document.getElementById('btnCloseImgBtn').addEventListener('click', () => {
+      document.getElementById('imageModal').classList.remove('show');
+    });
+
+    // Preview Modal Controls
+    const previewModal = document.getElementById('previewModal');
+    document.getElementById('btnOpenPreview').addEventListener('click', () => {
+      previewModal.classList.add('show');
+    });
+
+    document.getElementById('btnClosePreview').addEventListener('click', () => {
+      previewModal.classList.remove('show');
+    });
+
+    previewModal.addEventListener('click', (e) => {
+      if (e.target === previewModal) {
+        previewModal.classList.remove('show');
+      }
+    });
+
+    document.getElementById('imageModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('imageModal')) {
+        document.getElementById('imageModal').classList.remove('show');
+      }
+    });
+
+    // Toast Utility
+    function showToast(msg) {
+      const toast = document.getElementById('toastMsg');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2400);
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+
+    // Run on startup
+    window.addEventListener('DOMContentLoaded', initData);
+  </script>
+</body>
+</html>
